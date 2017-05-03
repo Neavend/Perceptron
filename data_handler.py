@@ -3,7 +3,7 @@ import re,numpy as np,random,math,time,decimal,os,json
 
 
 class data_processor():
-	
+
 	def __init__(self, ui):
 		self.user_interface = ui
 
@@ -49,7 +49,7 @@ class data_processor():
 					for col_px in range(0,len(image_matrix[0])):
 						new_txt_file.write(str(image_matrix[row_px][col_px]) + ",")
 						c+=1
-	
+
 	def load_matrix_data(self, matrix_dims, to_retrieve, file_name,user_interface):
 		self.user_interface = user_interface
 		self.matrix_width = matrix_dims[0]

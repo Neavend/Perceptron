@@ -1,5 +1,5 @@
 from __future__ import print_function
-import cv2,re,numpy as np,random,math,time,thread,decimal,tkMessageBox,tkSimpleDialog
+import cv2,re,numpy as np,random,math,time,thread,decimal
 
 class neural_network:
 
@@ -27,7 +27,7 @@ class neural_network:
 			self.input_count = input_count
 			self.testing_mode = testing_mode
 			self.biases_for_non_input_layers = biases_for_non_input_layers
-			self.weight_range = weight_range 
+			self.weight_range = weight_range
 			self.success_records = []
 			if(len(self.matrix_targets)<100):
 				self.is_small_data = True
@@ -55,7 +55,7 @@ class neural_network:
 				prev_layer_count = len(self.nn_neurons[neuron_layer-1])
 				neuron_weights = self.initilize_weights(prev_layer_count)
 				weights_change_record_neuron = np.zeros(prev_layer_count)
-		
+
 				weight_layer.append(neuron_weights)
 				weight_changes_layer.append(weights_change_record_neuron)
 
@@ -103,7 +103,7 @@ class neural_network:
 	error_by_1000 = 0
 	error_by_1000_counter = 1
 	output_error_total = 0
-	
+
 	def back_propagate(self, target_val,repeat_count):
 
 		if(len(self.nn_neurons[-1])>1 and type(target_val) is int):
@@ -143,7 +143,7 @@ class neural_network:
 			current_weight_vals = self.all_weights[weight_layer_count]
 			new_weight_vals = current_weight_vals - (self.learning_constant * full_back_prop_sum_to_input)
 			self.all_weights[weight_layer_count] = new_weight_vals
-	
+
 		self.test_counter += 1
 		self.error_by_1000_counter += 1
 

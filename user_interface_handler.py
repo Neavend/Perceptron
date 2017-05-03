@@ -1,8 +1,8 @@
 from __future__ import print_function
-import cv2,re,numpy as np,random,math,time,thread,decimal,tkMessageBox,tkSimpleDialog,matplotlib,os,json
+import cv2,re,numpy as np,random,math,time,threading,decimal,matplotlib,os,json
 from pprint import pprint
-import FileDialog
-from Tkinter import *
+from tkinter import *
+from tkinter import messagebox, simpledialog
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import matplotlib.pyplot as plt
@@ -59,10 +59,10 @@ class user_interface:
 		self.tk_nn_visual_canvas = Canvas(self.ui_frame, width=self.canvas_width, height=self.canvas_height,background="grey")
 		self.tk_nn_visual_canvas.pack(side=RIGHT)
 
-		self.g_figures = range(2)
-		self.g_axis = range(2)
+		self.g_figures = list(range(2))
+		self.g_axis = list(range(2))
 		self.g_lines = [[],[]]
-		self.g_canvas = range(2)
+		self.g_canvas = list(range(2))
 
 		rcParams.update({'figure.autolayout': True})
 
@@ -186,19 +186,19 @@ class user_interface:
 				layers.extend(hidden_layers)
 				biases = bias_str.split(",")
 				layers.append(output_count)
-				layers = map(int,layers)
-				biases = map(int,biases)
+				layers = list(map(int,layers))
+				biases = list(map(int,biases))
 				if(len(layers) > 0 and len(biases) > 0):
 					self.render_neural_net_visualization(layers,biases)
 
 	def render_ui_widgets(self):
 		self.render_nn_vis_trigger()
-		
+
 		icon = ImageTk.PhotoImage(Image.open("resources/perceptron-header.jpg"))#.resize((230, 100), Image.ANTIALIAS))
 		self.icon_view = Label(self.learn_options_frame,image=icon)
 		self.icon_view.image = icon
 		self.icon_view.pack()
-	
+
 		self.choose_settings_frame = Frame(self.learn_options_frame)
 		self.choose_settings_frame.pack()
 		self.render_settings_opts()
@@ -281,7 +281,7 @@ class user_interface:
 		self.input_descs_vis[label_text] += 1
 
 	def save_nn(self):
-		nn_name = tkSimpleDialog.askstring("Saving Neural Network", "Neural Net Name: ")
+		nn_name = simpledialog.askstring("Saving Neural Network", "Neural Net Name: ")
 		if(nn_name):
 			weight_layers = self.neural_network.all_weights
 			weights_as_list = []
@@ -324,7 +324,7 @@ class user_interface:
 		self.saved_settings_text.set(saved_settings[0])
 
 	def save_settings(self):
-		settings_name = tkSimpleDialog.askstring("Saving Settings", "Setting's Name: ")
+		settings_name = simpledialog.askstring("Saving Settings", "Setting's Name: ")
 		if(settings_name != None):
 			if(len(settings_name)>1):
 				settings_file_read = open(self.settings_file_name, "r")
@@ -340,11 +340,11 @@ class user_interface:
 				all_settings_as_str = json.dumps(all_settings_as_json)
 				settings_file_write = open(self.settings_file_name, "w")
 				settings_file_write.write(all_settings_as_str)
-				settings_file_read.close()	
+				settings_file_read.close()
 				settings_file_write.close()
 				self.saved_settings_opts.destroy()
 				self.render_settings_opts()
-	
+
 
 	def check_str_list_valid(self,string):
 		valid_str_entry = True
@@ -425,11 +425,11 @@ class user_interface:
 		values_to_ignore = self.prepro_values_to_ignore.get()
 		divider = self.prepro_divider.get()
 		if(self.check_str_list_valid(values_to_ignore)==False):
-			error = "Invalid values to ignore"
+			values_to_ignore = []
 		elif values_to_ignore == "":
 			values_to_ignore = []
 		else:
-			values_to_ignore = map(int,values_to_ignore.split(","))
+			values_to_ignore = list(values_to_ignore.split(","))
 		if(target_pos.isdigit()==False):
 			error = "Invalid target position"
 		else:
@@ -442,7 +442,7 @@ class user_interface:
 		self.data_processor.normalise_text_file(file_name,target_pos,values_to_ignore,divider)
 
 	def test_input(self):
-		input_str = tkSimpleDialog.askstring("Enter Input", "Enter the name of an image file, text file, enter data manually, or to use camera input enter 'camera': ")
+		input_str = simpledialog.askstring("Enter Input", "Enter the name of an image file, text file, enter data manually, or to use camera input enter 'camera': ")
 		if(input_str):
 			file_type_pos = input_str.rfind(".")
 			valid_files = ["png","jpg","txt"]
@@ -452,14 +452,14 @@ class user_interface:
 			else:
 				if(file_type_pos != -1):
 					file_type_str = input_str[file_type_pos+1:]
-				
+
 				if(file_type_str not in valid_files or file_type_str == "txt"):
 					if(file_type_str == "txt"):
 						input_str = open(input_str, 'r').read()
 					input_data = input_str.split(",")
 					item_as_array = self.data_processor.prep_matrix_for_input(np.asarray(input_data))
-					matrix_ready = np.reshape(item_as_array,(self.matrix_dims[0],self.matrix_dims[1]),order="A")	
-					
+					matrix_ready = np.reshape(item_as_array,(self.matrix_dims[0],self.matrix_dims[1]),order="A")
+
 				elif(file_type_str in valid_files):
 					image_matrix = cv2.imread(file_name)
 					image_matrix = cv2.cvtColor(image_matrix, cv2.COLOR_BGR2GRAY)
@@ -479,7 +479,7 @@ class user_interface:
 
 				if(output_pos_result != -1):
 					self.print_console("**OUTPUT RESULT: " + str(output_pos_result))
-	
+
 	def cancel_learning(self):
 		self.cancel_training = True
 		self.prepare_new_line_graph()
@@ -505,12 +505,12 @@ class user_interface:
 		if(self.check_str_list_valid(hidden_str+bias_str) == False or hidden_str == "" or bias_str == ""):
 			error = "You hidden layers or bias values are invalid"
 		else:
-			valid_values['hidden_layers'] = map(int,hidden_str.split(","))
-			valid_values['biases_for_non_input_layers'] = map(int,bias_str.split(","))
+			valid_values['hidden_layers'] = list(map(int,hidden_str.split(",")))
+			valid_values['biases_for_non_input_layers'] = list(map(int,bias_str.split(",")))
 
 			if(len(valid_values['hidden_layers'])+1 != len(valid_values['biases_for_non_input_layers'])):
 				error = "Bias count must be equal to "+str(len(valid_values['hidden_layers'])+1)+" (the total layer count expect input)"
-		
+
 		learning_constant = self.input_fields["learning_rate"].get()
 		if(learning_constant.replace(".", "", 1).isdigit() == False):
 			error = "Invalid learning constant"
@@ -527,14 +527,14 @@ class user_interface:
 		if(self.check_str_list_valid(matrix_dims_str)==False):
 			error = "Invalid matrix dimensions"
 		else:
-			valid_values['matrix_dims'] = map(int,matrix_dims_str.split(","))
+			valid_values['matrix_dims'] = list(map(int,matrix_dims_str.split(",")))
 
 		weight_range_str_test = weight_range_str.replace(".", "")
 		weight_range_str_test = weight_range_str_test.replace("-", "")
 		if(self.check_str_list_valid(weight_range_str_test)==False):
 			error = "Invalid weight ranges"
 		else:
-			valid_values['weight_range'] = map(float,weight_range_str.split(","))
+			valid_values['weight_range'] = list(map(float,weight_range_str.split(",")))
 		if(to_retrieve.isdigit() == False and to_retrieve != 'all'):
 			error = "Invalid matrices to use entry"
 
@@ -542,7 +542,7 @@ class user_interface:
 			if(to_retrieve!='all'):
 				valid_values['to_retrieve'] = int(to_retrieve)
 			else:
-				valid_values['to_retrieve'] = to_retrieve 
+				valid_values['to_retrieve'] = to_retrieve
 		if(output_count.isdigit() == False):
 			error = "Invalid output count"
 		else:
@@ -577,9 +577,10 @@ class user_interface:
 			self.start_learning_opt.config(state="disabled")
 			self.cancel_learning_opt.config(state="normal")
 			self.save_nn_opt.config(state="disabled")
-			thread.start_new_thread(self.start_learning_in_thread,())
+			#threading.Thread(target=self.start_learning_in_thread).start()
+			self.start_learning_in_thread()
 		else:
-			tkMessageBox.showinfo("Error", self.field_result['error'])
+			messagebox.showinfo("Error", self.field_result['error'])
 
 	matrix_data = []
 	matrix_targets = []
